@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Management App</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <div class="page-container">
+        <div id="saleDataPage" class="page active-page">
+            <div class="container">
+                <div class="header-with-button">
+                    <h1>Sales Data Entry</h1>
+                    <button id="saleOptionsBtn" class="top-right-btn"><i class="fas fa-cog"></i></button>
+                </div>
+                <form id="dataForm">
+                    <input type="hidden" name="sheetName" value="Sale">
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" name="Date">
+                    <label for="merchant">Merchant:</label>
+                    <select id="merchant" name="Merchant" required></select>
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" name="Quantity" min="0" required>
+                    <label for="amount">Amount:</label>
+                    <input type="text" id="amount" name="Amount" readonly>
+                    <label for="paidStatus">Paid Status:</label>
+                    <select id="paidStatus" name="Paid Status" required>
+                        <option value="Paid">Paid</option>
+                        <option value="Unpaid">Unpaid</option>
+                    </select>
+                    <button type="submit">Submit Data</button>
+                </form>
+                <p id="response-message"></p>
+                <hr>
+                <h2>View Sale Data</h2>
+                <div class="search-controls">
+                    <input type="text" id="searchInput" placeholder="Search...">
+                    <button id="loadAllDataBtn" class="icon-btn" title="Load All Data"><i class="fas fa-sync-alt"></i></button>
+                    <select id="unpaidMerchantFilter"></select>
+                    <button id="loadUnpaidBtn" class="icon-btn" title="Load Unpaid Only"><i class="fas fa-exclamation-triangle"></i></button>
+                </div>
+                <div class="table-wrapper">
+                    <div id="saleDataTable"></div>
+                </div>
+                <button id="saveChangesBtn" class="action-btn" style="display:none;">Save Changes</button>
+                <p id="update-message"></p>
+            </div>
+        </div>
+
+        <div id="buyDataPage" class="page">
+            <div class="container">
+                 <div class="header-with-button">
+                    <h1>Buy Data Entry</h1>
+                    <button id="buyOptionsBtn" class="top-right-btn"><i class="fas fa-cog"></i></button>
+                </div>
+                <form id="buyDataForm">
+                    <input type="hidden" name="sheetName" value="Buy">
+                    <label for="buyDate">Date:</label>
+                    <input type="date" id="buyDate" name="Date">
+                    <label for="buyDescription">Description:</label>
+                    <select id="buyDescription" name="Description" required></select>
+                    <label for="buyQuantity">Quantity:</label>
+                    <input type="number" id="buyQuantity" name="Quantity" min="0" required>
+                    <label for="buyUnitPrice">Unit Price:</label>
+                    <input type="number" id="buyUnitPrice" name="Unit Price" readonly>
+                    <label for="buyAmount">Amount:</label>
+                    <input type="text" id="buyAmount" name="Amount" readonly>
+                    <label for="buyPaidStatus">Paid Status:</label>
+                    <select id="buyPaidStatus" name="Paid Status" required>
+                        <option value="Paid">Paid</option>
+                        <option value="Unpaid">Unpaid</option>
+                    </select>
+                    <button type="submit">Submit Data</button>
+                </form>
+                <p id="buy-response-message"></p>
+            </div>
+        </div>
+        
+        <div id="optionsPage" class="page">
+            <div class="container">
+                <h1>Manage Options</h1>
+                <h2 id="merchantOptionsHeader">Merchant Options</h2>
+                <div class="options-controls">
+                    <input type="text" id="newMerchantInput" placeholder="New Merchant Name">
+                    <input type="number" id="newPriceInput" placeholder="Unit Price" min="0">
+                    <button id="addMerchantBtn">Add Merchant</button>
+                </div>
+                <ul id="merchantList"></ul>
+                <hr>
+                <h2 id="buyOptionsHeader">Buy Options</h2>
+                <div class="options-controls">
+                    <input type="text" id="newDescriptionInput" placeholder="New Description">
+                    <input type="number" id="newBuyPriceInput" placeholder="Unit Price" min="0">
+                    <button id="addDescriptionBtn">Add Description</button>
+                </div>
+                <ul id="descriptionList"></ul>
+            </div>
+        </div>
+
+        <div id="calculatorPage" class="page">
+             <div class="container">
+                <h1>Calculator</h1>
+                <form id="calculatorForm">
+                    <input type="hidden" name="sheetName" value="Calculation">
+                    <div class="calculator-grid">
+                        <label for="dollarPrice">$ Price:</label>
+                        <input type="number" id="dollarPrice" name="dollarPrice" required>
+                        <label for="pePrice">PE Price:</label>
+                        <input type="number" id="pePrice" name="pePrice" required>
+                        <label for="rollPrice">အိတ်ခွံ (1 roll):</label>
+                        <input type="number" id="rollPrice" name="rollPrice" required>
+                        <label for="lbPrice">5 * 9 (1 Lb):</label>
+                        <input type="number" id="lbPrice" name="lbPrice" required>
+                        <label for="boxPrice">ဂျပ်ဖာ:</label>
+                        <input type="number" id="boxPrice" name="boxPrice" required>
+                        <label for="carPrice">ကားခ (1 အိတ်):</label>
+                        <input type="number" id="carPrice" name="carPrice" required>
+                        <label for="laborPrice">လုပ်အားခ:</label>
+                        <input type="number" id="laborPrice" name="laborPrice" required>
+                        <label for="packCount">အထုပ်ရေ:</label>
+                        <input type="number" id="packCount" name="packCount" required>
+                        <label for="salePrice">Sale Price:</label>
+                        <input type="number" id="salePrice" name="salePrice" required>
+                    </div>
+                    <button type="submit">Save to Sheet</button>
+                    <div id="calculationResult">
+                        <div class="result-row">
+                            <span id="costLabel">အရင်း:</span>
+                            <span id="totalCostValue">0</span>
+                        </div>
+                        <div class="result-row">
+                            <span id="profitLabel">Profit:</span>
+                            <span id="profitValue">0</span>
+                        </div>
+                    </div>
+                </form>
+                <p id="calc-response-message"></p>
+            </div>
+        </div>
+
+        <div id="summaryPage" class="page">
+            <div class="container">
+                <h1>Summary</h1>
+                <h2>Merchant Sales Summary</h2>
+                <div class="table-wrapper">
+                    <div id="merchantSummaryTable"></div>
+                </div>
+                <hr>
+                <h2>To Remit</h2>
+                <div class="table-wrapper">
+                    <div id="remitSummaryTable"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <nav class="navbar">
+        <button id="saleDataBtnNav" class="active"><i class="fas fa-home"></i><span>Sale Data</span></button>
+        <button id="buyDataBtnNav"><i class="fas fa-shopping-cart"></i><span>Buy Data</span></button>
+        <button id="calculatorBtnNav"><i class="fas fa-calculator"></i><span>Calculator</span></button>
+        <button id="summaryBtnNav"><i class="fas fa-chart-bar"></i><span>Summary</span></button>
+    </nav>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,301 @@
+/* General Body and Layout */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-container {
+    flex-grow: 1; /* Allows it to take up available space */
+    overflow-y: auto; /* Adds scrollbar if content overflows */
+    padding-bottom: 60px; /* Space for the navbar */
+}
+
+/* Page Navigation */
+.page {
+    display: none;
+}
+
+.page.active-page {
+    display: block;
+}
+
+/* Header and Buttons */
+h1 {
+    color: #007BFF;
+    border-bottom: 2px solid #007BFF;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+h2 {
+    color: #555;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.header-with-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.top-right-btn {
+    background: none;
+    border: none;
+    color: #007BFF;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Forms */
+form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select,
+.remit-input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+button[type="submit"], .action-btn {
+    background-color: #007BFF;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+    font-size: 16px;
+}
+
+button[type="submit"]:hover, .action-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Data Table and Search */
+hr {
+    border: 0;
+    height: 1px;
+    background: #ccc;
+    margin: 20px 0;
+}
+
+.search-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+#searchInput {
+    flex-grow: 1;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #007BFF;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+input[type="checkbox"] {
+    transform: scale(1.5);
+}
+
+/* Options Page */
+.options-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.options-controls input {
+    flex-grow: 1;
+}
+.options-controls button {
+    width: auto;
+}
+#merchantList, #descriptionList {
+    list-style-type: none;
+    padding: 0;
+}
+#merchantList li, #descriptionList li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+#merchantList li span, #descriptionList li span {
+    flex-grow: 1;
+}
+#merchantList li .edit-btn, #descriptionList li .edit-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #007BFF;
+}
+#merchantList li .remove-btn, #descriptionList li .remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #ff4d4d;
+}
+
+/* Calculator Page */
+.calculator-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.calculator-grid label {
+    margin-top: 0;
+}
+.calculator-grid input {
+    margin-top: 0;
+}
+#calculationResult {
+    background-color: #e9ecef;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    text-align: right;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+}
+.result-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+#costLabel, #profitLabel {
+    color: #555;
+}
+#totalCostValue, #profitValue {
+    color: #007BFF;
+}
+#profitValue {
+    color: #28a745;
+}
+
+/* Bottom Navbar */
+.navbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    background-color: #fff;
+    border-top: 1px solid #ccc;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.navbar button {
+    background: none;
+    border: none;
+    flex: 1;
+    padding: 10px 0;
+    color: #888;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 12px;
+    transition: color 0.3s ease;
+    pointer-events: auto;
+}
+
+.navbar button i {
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.navbar button.active {
+    color: #007BFF;
+}

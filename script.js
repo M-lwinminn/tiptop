@@ -1,5 +1,5 @@
-// --- IMPORTANT: REPLACE WITH YOUR SCRIPT URL ---
-const scriptURL = 'https://script.google.com/macros/s/AKfycbxl_dyAbv2NksCslW7hmcxtIAfOnkI5dOE02a9jOOR0Bh_o6A3rdx1qZnV-4EB1xMES/exec';
+/// --- IMPORTANT: REPLACE WITH YOUR SCRIPT URL ---
+const scriptURL = 'https://script.google.com/macros/s/AKfycbzVRw4IFXSrxtb-p9A0JBCwFNLgGDR_-g_F4EI2exDQmnzOnCsV2uoDgEFb_o9Y9-Fp/exec';
 
 // --- Page Navigation Elements ---
 const saleDataBtnNav = document.getElementById('saleDataBtnNav');
@@ -9,6 +9,9 @@ const summaryBtnNav = document.getElementById('summaryBtnNav');
 const saleOptionsBtn = document.getElementById('saleOptionsBtn');
 const buyOptionsBtn = document.getElementById('buyOptionsBtn');
 const pages = document.querySelectorAll('.page');
+const optionsPage = document.getElementById('optionsPage');
+const merchantOptionsHeader = document.getElementById('merchantOptionsHeader');
+const buyOptionsHeader = document.getElementById('buyOptionsHeader');
 
 // --- Form Elements ---
 const form = document.getElementById('dataForm');
@@ -34,6 +37,12 @@ const buyDescriptionSelect = document.getElementById('buyDescription');
 const buyQuantityInput = document.getElementById('buyQuantity');
 const buyUnitPriceInput = document.getElementById('buyUnitPrice');
 const buyAmountInput = document.getElementById('buyAmount');
+const buyResponseMessage = document.getElementById('buy-response-message');
+const buySearchInput = document.getElementById('buySearchInput');
+const loadAllBuyDataBtn = document.getElementById('loadAllBuyDataBtn');
+const buyDataTable = document.getElementById('buyDataTable');
+const saveBuyChangesBtn = document.getElementById('saveBuyChangesBtn');
+const buyUpdateMessage = document.getElementById('buy-update-message');
 
 // --- Options Page Elements ---
 const newMerchantInput = document.getElementById('newMerchantInput');
@@ -56,6 +65,8 @@ const remitSummaryTableDiv = document.getElementById('remitSummaryTable');
 // --- Global State ---
 let allSaleData = [];
 let changedRows = new Map();
+let allBuyData = [];
+let changedBuyRows = new Map();
 let merchants = JSON.parse(localStorage.getItem('merchants')) || [
     { name: 'ZinZin 1', price: 207000 }, { name: 'ZinZin', price: 207000 },
     { name: 'Win', price: 211500 }, { name: 'Moe', price: 207000 },
@@ -91,6 +102,9 @@ merchantSelect.addEventListener('change', calculateSaleAmount);
 // Buy Page Actions
 buyQuantityInput.addEventListener('input', calculateBuyAmount);
 buyDescriptionSelect.addEventListener('change', calculateBuyAmount);
+loadAllBuyDataBtn.addEventListener('click', loadAllBuyData);
+saveBuyChangesBtn.addEventListener('click', saveBuyChanges);
+buySearchInput.addEventListener('input', filterBuyData);
 
 // Options Page Actions
 addMerchantBtn.addEventListener('click', addMerchant);
@@ -122,7 +136,21 @@ function showPage(pageId, sectionId = null) {
     document.getElementById(pageId).classList.add('active-page');
 
     document.querySelectorAll('.navbar button').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(pageId.replace('Page', 'BtnNav')).classList.add('active');
+    const navButton = document.getElementById(pageId.replace('Page', 'BtnNav'));
+    if (navButton) {
+        navButton.classList.add('active');
+    }
+
+    // New, more robust logic for the options page
+    if (pageId === 'optionsPage') {
+        merchantOptionsHeader.style.display = 'none';
+        buyOptionsHeader.style.display = 'none';
+        if (sectionId === 'merchantOptionsHeader') {
+            merchantOptionsHeader.style.display = 'block';
+        } else if (sectionId === 'buyOptionsHeader') {
+            buyOptionsHeader.style.display = 'block';
+        }
+    }
 
     if (pageId === 'summaryPage') {
         loadMerchantSummary();
@@ -247,6 +275,7 @@ async function loadAllSaleData() {
         saveChangesBtn.style.display = 'block';
     } catch (e) { console.error('Error loading sale data:', e); }
 }
+
 function loadUnpaidData() {
     const selectedMerchant = unpaidMerchantFilter.value;
     let filteredData = allSaleData.filter(row => row['Paid Status'] === '');
@@ -256,8 +285,9 @@ function loadUnpaidData() {
     renderEditableTable(filteredData);
     saveChangesBtn.style.display = 'block';
 }
+
 function renderEditableTable(data) {
-    let tableHTML = '<table><thead><tr><th>Date</th><th>Merchant</th><th>Quantity</th><th>Amount</th><th>Paid</th></tr></thead><tbody>';
+    let tableHTML = '<table><thead><tr><th>Date</th><th>Merchant</th><th>Quantity</th><th>Amount</th><th>Paid</th><th>Actions</th></tr></thead><tbody>';
     data.forEach(row => {
         const originalIndex = allSaleData.findIndex(d => JSON.stringify(d) === JSON.stringify(row));
         const isPaid = row['Paid Status'] === 'Paid';
@@ -267,6 +297,7 @@ function renderEditableTable(data) {
             <td>${row.Quantity}</td>
             <td>${row.Amount}</td>
             <td><input type="checkbox" class="paid-status-checkbox" data-row-index="${originalIndex}" ${isPaid ? 'checked' : ''}></td>
+            <td><button class="delete-btn" data-row-index="${originalIndex}">❌</button></td>
         </tr>`;
     });
     tableHTML += '</tbody></table>';
@@ -274,11 +305,57 @@ function renderEditableTable(data) {
     document.querySelectorAll('.paid-status-checkbox').forEach(cb => cb.onchange = (e) => {
         changedRows.set(e.target.dataset.rowIndex, e.target.checked);
     });
+    document.querySelectorAll('.delete-btn').forEach(btn => btn.onclick = (e) => {
+        const rowIndex = e.target.dataset.rowIndex;
+        deleteRow(parseInt(rowIndex) + 2, 'Sale'); // +2 because Sheets is 1-indexed and has a header row
+    });
 }
+
 function filterData() {
     const term = searchInput.value.toLowerCase();
     const filtered = allSaleData.filter(row => Object.values(row).some(val => String(val).toLowerCase().includes(term)));
     renderEditableTable(filtered);
+}
+
+async function loadAllBuyData() {
+    try {
+        const response = await fetch(`${scriptURL}?sheetName=Buy`);
+        allBuyData = await response.json();
+        renderBuyTable(allBuyData);
+        saveBuyChangesBtn.style.display = 'block';
+    } catch (e) { console.error('Error loading buy data:', e); }
+}
+
+function renderBuyTable(data) {
+    let tableHTML = '<table><thead><tr><th>Date</th><th>Description</th><th>Quantity</th><th>Unit Price</th><th>Amount</th><th>Paid</th><th>Actions</th></tr></thead><tbody>';
+    data.forEach(row => {
+        const originalIndex = allBuyData.findIndex(d => JSON.stringify(d) === JSON.stringify(row));
+        const isPaid = row['Paid Status'] === 'Paid';
+        tableHTML += `<tr data-row-index="${originalIndex}">
+            <td>${new Date(row.Date).toLocaleDateString()}</td>
+            <td>${row.Description}</td>
+            <td>${row.Quantity}</td>
+            <td>${row['Unit Price']}</td>
+            <td>${row.Amount}</td>
+            <td><input type="checkbox" class="buy-paid-status-checkbox" data-row-index="${originalIndex}" ${isPaid ? 'checked' : ''}></td>
+            <td><button class="buy-delete-btn" data-row-index="${originalIndex}">❌</button></td>
+        </tr>`;
+    });
+    tableHTML += '</tbody></table>';
+    buyDataTable.innerHTML = tableHTML;
+    document.querySelectorAll('.buy-paid-status-checkbox').forEach(cb => cb.onchange = (e) => {
+        changedBuyRows.set(e.target.dataset.rowIndex, e.target.checked);
+    });
+    document.querySelectorAll('.buy-delete-btn').forEach(btn => btn.onclick = (e) => {
+        const rowIndex = e.target.dataset.rowIndex;
+        deleteRow(parseInt(rowIndex) + 2, 'Buy');
+    });
+}
+
+function filterBuyData() {
+    const term = buySearchInput.value.toLowerCase();
+    const filtered = allBuyData.filter(row => Object.values(row).some(val => String(val).toLowerCase().includes(term)));
+    renderBuyTable(filtered);
 }
 
 // --- Save Changes ---
@@ -299,6 +376,50 @@ async function saveChanges() {
         setTimeout(loadAllSaleData, 1000); // Reload data after a short delay
     } catch (e) {
         updateMessage.textContent = 'Error saving changes.';
+        console.error('Error:', e);
+    }
+}
+
+async function saveBuyChanges() {
+    if (changedBuyRows.size === 0) {
+        buyUpdateMessage.textContent = 'No changes to save.';
+        return;
+    }
+    buyUpdateMessage.textContent = 'Saving...';
+    const updates = Array.from(changedBuyRows, ([rowIndex, newValue]) => ({ rowIndex, newValue }));
+    const formData = new FormData();
+    formData.append('sheetName', 'updateBuyRow');
+    formData.append('updates', JSON.stringify(updates));
+    try {
+        await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: formData });
+        buyUpdateMessage.textContent = 'Changes saved!';
+        changedBuyRows.clear();
+        setTimeout(loadAllBuyData, 1000); // Reload data after a short delay
+    } catch (e) {
+        buyUpdateMessage.textContent = 'Error saving changes.';
+        console.error('Error:', e);
+    }
+}
+
+async function deleteRow(rowIndex, sheetName) {
+    if (!confirm(`Are you sure you want to delete row ${rowIndex - 1}?`)) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('sheetName', `delete${sheetName}Row`);
+    formData.append('rowIndex', rowIndex);
+
+    try {
+        await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: formData });
+        alert(`Row ${rowIndex - 1} deleted successfully!`);
+        if (sheetName === 'Sale') {
+            loadAllSaleData();
+        } else if (sheetName === 'Buy') {
+            loadAllBuyData();
+        }
+    } catch (e) {
+        alert('Error deleting row. Check the script URL and permissions.');
         console.error('Error:', e);
     }
 }
@@ -422,6 +543,7 @@ function performCalculations() {
 
 // --- Initial Load ---
 document.addEventListener('DOMContentLoaded', () => {
+    // These functions must run on every page load to set up the dropdowns and options lists
     renderMerchants();
     renderDescriptions();
     showPage('saleDataPage');

@@ -7,7 +7,7 @@ const firebaseConfig = {
     messagingSenderId: "311902212615",
     appId: "1:311902212615:web:55a9561645d15f1d91d0a2",
     measurementId: "G-65YP7M5JVR",
-    databaseURL: "https://bssaledata-default-rtdb.firebaseio.com/"
+    databaseURL: "https://bssaledata-default-rtdb.asia-southeast1.firebasedatabase.app/"
 };
 
 // Initialize Firebase
@@ -379,3 +379,4 @@ function displayResults(results, pageType, resultsTableBody) {
 // Call the search setup functions for each page
 setupSearchFunctionality('saleSearchForm', salesData, 'saleResultsTable', 'saveSaleChanges', 'sale');
 setupSearchFunctionality('buySearchForm', buyData, 'buyResultsTable', 'saveBuyChanges', 'buy');
+

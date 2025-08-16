@@ -92,6 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setupCalculatorPage();
     setupSaleSettingsPage();
     setupBuySettingsPage();
+    // Updated search function calls
+    setupSearchFunctionality('saleSearchForm', 'saleResultsTable', 'saveSaleChanges', 'sale');
+    setupSearchFunctionality('buySearchForm', 'buyResultsTable', 'saveBuyChanges', 'buy');
 });
 
 // --- Firebase Data Fetching and Real-time Listeners ---
@@ -454,20 +457,22 @@ function updateDescriptionList() {
     });
 }
 
-// --- Search Functionality (Now Firebase-compatible) ---
-function setupSearchFunctionality(searchFormId, dataArray, tableId, saveChangesBtnId, pageType) {
+// --- Search Functionality (Corrected to use live data) ---
+function setupSearchFunctionality(searchFormId, tableId, saveChangesBtnId, pageType) {
     const searchForm = document.getElementById(searchFormId);
     const resultsTableBody = document.querySelector(`#${tableId} tbody`);
     const saveChangesBtn = document.getElementById(saveChangesBtnId);
 
     searchForm.addEventListener('submit', (e) => {
         e.preventDefault();
+        const dataToSearch = (pageType === 'sale') ? salesData : buyData;
+
         const searchQuery = document.getElementById(`${pageType}SearchQuery`).value.toLowerCase();
         const searchStatus = document.getElementById(`${pageType}SearchStatus`).value;
         const startDate = document.getElementById(`${pageType}StartDate`).value;
         const endDate = document.getElementById(`${pageType}EndDate`).value;
 
-        const filteredData = dataArray.filter(item => {
+        const filteredData = dataToSearch.filter(item => {
             const matchesQuery = pageType === 'sale' ? item.merchant.toLowerCase().includes(searchQuery) : item.description.toLowerCase().includes(searchQuery);
             const matchesStatus = searchStatus === 'all' || (searchStatus === 'paid' && item.paid) || (searchStatus === 'unpaid' && !item.paid);
             const itemDate = new Date(item.date);
@@ -489,13 +494,13 @@ function setupSearchFunctionality(searchFormId, dataArray, tableId, saveChangesB
     saveChangesBtn.addEventListener('click', () => {
         const updates = {};
         const databaseRef = pageType === 'sale' ? salesRef : buyRef;
+        const dataArray = pageType === 'sale' ? salesData : buyData;
 
         document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => {
             const checkbox = row.querySelector('input[type="checkbox"]');
             if (checkbox) {
                 const key = checkbox.dataset.key;
                 const newPaidStatus = checkbox.checked;
-                // Only update if the value has changed
                 const currentItem = dataArray.find(item => item.id === key);
                 if (currentItem && currentItem.paid !== newPaidStatus) {
                     updates[key] = { paid: newPaidStatus };
@@ -551,7 +556,3 @@ function displayResults(results, pageType, resultsTableBody) {
         cell.textContent = 'No results found.';
     }
 }
-
-// Call the search setup functions for each page
-setupSearchFunctionality('saleSearchForm', salesData, 'saleResultsTable', 'saveSaleChanges', 'sale');
-setupSearchFunctionality('buySearchForm', buyData, 'buyResultsTable', 'saveBuyChanges', 'buy');

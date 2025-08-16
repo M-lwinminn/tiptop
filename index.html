@@ -35,11 +35,6 @@
                                 <label for="merchant">Merchant</label>
                                 <select id="merchant" required>
                                     <option value="">Select a Merchant</option>
-                                    <option value="ZinZin 1">ZinZin 1</option>
-                                    <option value="ZinZin">ZinZin</option>
-                                    <option value="ZZ Kpt">ZZ Kpt</option>
-                                    <option value="Win">Win</option>
-                                    <option value="Moe">Moe</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -110,8 +105,24 @@
                 </div>
                 <div id="sale-settings-tab" class="sub-tab">
                     <section class="settings-section">
-                        <h2>Settings</h2>
-                        <p>This is where settings for the Sale page will go. We can add options here like a reset button or managing merchants.</p>
+                        <h2>Manage Merchants</h2>
+                        <form id="merchantForm">
+                            <div class="form-group">
+                                <label for="newMerchantName">Merchant Name</label>
+                                <input type="text" id="newMerchantName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newMerchantPrice">Default Price</label>
+                                <input type="number" id="newMerchantPrice" required>
+                            </div>
+                            <button type="submit">Add Merchant</button>
+                        </form>
+
+                        <div class="settings-list">
+                            <h3>Current Merchants</h3>
+                            <ul id="merchantList">
+                                </ul>
+                        </div>
                     </section>
                 </div>
             </div>
@@ -143,8 +154,12 @@
                                 <input type="number" id="buyQuantity" required min="1">
                             </div>
                             <div class="form-group">
+                                <label for="buyUnitPrice">Unit Price</label>
+                                <input type="number" id="buyUnitPrice" required>
+                            </div>
+                            <div class="form-group">
                                 <label for="buyAmount">Amount</label>
-                                <input type="text" id="buyAmount">
+                                <input type="text" id="buyAmount" disabled>
                             </div>
                             <div class="form-group checkbox-group">
                                 <label for="buyPaidStatus">Paid</label>
@@ -202,8 +217,20 @@
                 </div>
                 <div id="buy-settings-tab" class="sub-tab">
                     <section class="settings-section">
-                        <h2>Settings</h2>
-                        <p>This is where settings for the Buy page will go. We can add options here to manage purchase descriptions.</p>
+                        <h2>Manage Buy Descriptions</h2>
+                        <form id="descriptionForm">
+                            <div class="form-group">
+                                <label for="newDescriptionName">Description Name</label>
+                                <input type="text" id="newDescriptionName" required>
+                            </div>
+                            <button type="submit">Add Description</button>
+                        </form>
+
+                        <div class="settings-list">
+                            <h3>Current Descriptions</h3>
+                            <ul id="descriptionList">
+                                </ul>
+                        </div>
                     </section>
                 </div>
             </div>

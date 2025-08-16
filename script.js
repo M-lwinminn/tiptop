@@ -1,3 +1,20 @@
+// Add Firebase configuration and initialization here
+const firebaseConfig = {
+    apiKey: "AIzaSyAKTchDbgUYGKgJC7oJRY4CiRbFCzNZIfs",
+    authDomain: "bssaledata.firebaseapp.com",
+    projectId: "bssaledata",
+    storageBucket: "bssaledata.firebasestorage.app",
+    messagingSenderId: "311902212615",
+    appId: "1:311902212615:web:55a9561645d15f1d91d0a2",
+    measurementId: "G-65YP7M5JVR",
+    databaseURL: "https://bssaledata-default-rtdb.firebaseio.com/"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+
 // Data stores
 const merchants = {
     'ZinZin 1': 207000,

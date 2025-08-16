@@ -3,167 +3,340 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Management App</title>
+    <title>Sales & Buy App</title>
     <link rel="stylesheet" href="style.css">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <script>
+      // Paste your Firebase config object here.
+      const firebaseConfig = {
+        apiKey: "AIzaSyAKTchDbgUYGKgJC7oJRY4CiRbFCzNZIfs",
+        authDomain: "bssaledata.firebaseapp.com",
+        projectId: "bssaledata",
+        storageBucket: "bssaledata.firebasestorage.app",
+        messagingSenderId: "311902212615",
+        appId: "1:311902212615:web:55a9561645d15f1d91d0a2",
+        measurementId: "G-65YP7M5JVR"
+        databaseURL: "https://bssaledata-default-rtdb.firebaseio.com/"
+     };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+    </script>
 </head>
 <body>
 
-    <div class="page-container">
-        <div id="saleDataPage" class="page active-page">
-            <div class="container">
-                <div class="header-with-button">
-                    <h1>Sales Data Entry</h1>
-                    <button id="saleOptionsBtn" class="top-right-btn"><i class="fas fa-cog"></i></button>
-                </div>
-                <form id="dataForm">
-                    <input type="hidden" name="sheetName" value="Sale">
-                    <label for="date">Date:</label>
-                    <input type="date" id="date" name="Date">
-                    <label for="merchant">Merchant:</label>
-                    <select id="merchant" name="Merchant" required></select>
-                    <label for="quantity">Quantity:</label>
-                    <input type="number" id="quantity" name="Quantity" min="0" required>
-                    <label for="amount">Amount:</label>
-                    <input type="text" id="amount" name="Amount" readonly>
-                    <label for="paidStatus">Paid Status:</label>
-                    <select id="paidStatus" name="Paid Status" required>
-                        <option value="Paid">Paid</option>
-                        <option value="Unpaid">Unpaid</option>
-                    </select>
-                    <button type="submit">Submit Data</button>
-                </form>
-                <p id="response-message"></p>
-                <hr>
-                <h2>View Sale Data</h2>
-                <div class="search-controls">
-                    <input type="text" id="searchInput" placeholder="Search...">
-                    <button id="loadAllDataBtn" class="icon-btn" title="Load All Data"><i class="fas fa-sync-alt"></i></button>
-                    <select id="unpaidMerchantFilter"></select>
-                    <button id="loadUnpaidBtn" class="icon-btn" title="Load Unpaid Only"><i class="fas fa-exclamation-triangle"></i></button>
-                </div>
-                <div class="table-wrapper">
-                    <div id="saleDataTable"></div>
-                </div>
-                <button id="saveChangesBtn" class="action-btn" style="display:none;">Save Changes</button>
-                <p id="update-message"></p>
-            </div>
-        </div>
+    <main class="page-container">
 
-        <div id="buyDataPage" class="page">
-            <div class="container">
-                 <div class="header-with-button">
-                    <h1>Buy Data Entry</h1>
-                    <button id="buyOptionsBtn" class="top-right-btn"><i class="fas fa-cog"></i></button>
-                </div>
-                <form id="buyDataForm">
-                    <input type="hidden" name="sheetName" value="Buy">
-                    <label for="buyDate">Date:</label>
-                    <input type="date" id="buyDate" name="Date">
-                    <label for="buyDescription">Description:</label>
-                    <select id="buyDescription" name="Description" required></select>
-                    <label for="buyQuantity">Quantity:</label>
-                    <input type="number" id="buyQuantity" name="Quantity" min="0" required>
-                    <label for="buyUnitPrice">Unit Price:</label>
-                    <input type="number" id="buyUnitPrice" name="Unit Price" readonly>
-                    <label for="buyAmount">Amount:</label>
-                    <input type="text" id="buyAmount" name="Amount" readonly>
-                    <label for="buyPaidStatus">Paid Status:</label>
-                    <select id="buyPaidStatus" name="Paid Status" required>
-                        <option value="Paid">Paid</option>
-                        <option value="Unpaid">Unpaid</option>
-                    </select>
-                    <button type="submit">Submit Data</button>
-                </form>
-                <p id="buy-response-message"></p>
+        <section class="page" id="salePage" data-page="sale">
+            <div class="sub-nav-bar">
+                <a href="#" class="sub-nav-button active" data-tab-target="sale-form-tab">Record</a>
+                <a href="#" class="sub-nav-button" data-tab-target="sale-search-tab">Search</a>
+                <a href="#" class="sub-nav-button" data-tab-target="sale-settings-tab">Settings</a>
             </div>
-        </div>
-        
-        <div id="optionsPage" class="page">
-            <div class="container">
-                <h1>Manage Options</h1>
-                <h2 id="merchantOptionsHeader">Merchant Options</h2>
-                <div class="options-controls">
-                    <input type="text" id="newMerchantInput" placeholder="New Merchant Name">
-                    <input type="number" id="newPriceInput" placeholder="Unit Price" min="0">
-                    <button id="addMerchantBtn">Add Merchant</button>
+            <div class="sub-tab-content">
+                <div id="sale-form-tab" class="sub-tab active">
+                    <section class="data-entry-form">
+                        <h2>Record a Sale</h2>
+                        <form id="saleForm">
+                            <div class="form-group">
+                                <label for="saleDate">Date</label>
+                                <input type="date" id="saleDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="merchant">Merchant</label>
+                                <select id="merchant" required>
+                                    <option value="">Select a Merchant</option>
+                                    <option value="ZinZin 1">ZinZin 1</option>
+                                    <option value="ZinZin">ZinZin</option>
+                                    <option value="ZZ Kpt">ZZ Kpt</option>
+                                    <option value="Win">Win</option>
+                                    <option value="Moe">Moe</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="quantity">Quantity</label>
+                                <input type="number" id="quantity" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="unitPrice">Unit Price</label>
+                                <input type="text" id="unitPrice" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="amount">Amount</label>
+                                <input type="text" id="amount" disabled>
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <label for="paidStatus">Paid</label>
+                                <input type="checkbox" id="paidStatus">
+                            </div>
+                            <button type="submit">Add Sale</button>
+                        </form>
+                    </section>
                 </div>
-                <ul id="merchantList"></ul>
-                <hr>
-                <h2 id="buyOptionsHeader">Buy Options</h2>
-                <div class="options-controls">
-                    <input type="text" id="newDescriptionInput" placeholder="New Description">
-                    <input type="number" id="newBuyPriceInput" placeholder="Unit Price" min="0">
-                    <button id="addDescriptionBtn">Add Description</button>
-                </div>
-                <ul id="descriptionList"></ul>
-            </div>
-        </div>
-
-        <div id="calculatorPage" class="page">
-             <div class="container">
-                <h1>Calculator</h1>
-                <form id="calculatorForm">
-                    <input type="hidden" name="sheetName" value="Calculation">
-                    <div class="calculator-grid">
-                        <label for="dollarPrice">$ Price:</label>
-                        <input type="number" id="dollarPrice" name="dollarPrice" required>
-                        <label for="pePrice">PE Price:</label>
-                        <input type="number" id="pePrice" name="pePrice" required>
-                        <label for="rollPrice">အိတ်ခွံ (1 roll):</label>
-                        <input type="number" id="rollPrice" name="rollPrice" required>
-                        <label for="lbPrice">5 * 9 (1 Lb):</label>
-                        <input type="number" id="lbPrice" name="lbPrice" required>
-                        <label for="boxPrice">ဂျပ်ဖာ:</label>
-                        <input type="number" id="boxPrice" name="boxPrice" required>
-                        <label for="carPrice">ကားခ (1 အိတ်):</label>
-                        <input type="number" id="carPrice" name="carPrice" required>
-                        <label for="laborPrice">လုပ်အားခ:</label>
-                        <input type="number" id="laborPrice" name="laborPrice" required>
-                        <label for="packCount">အထုပ်ရေ:</label>
-                        <input type="number" id="packCount" name="packCount" required>
-                        <label for="salePrice">Sale Price:</label>
-                        <input type="number" id="salePrice" name="salePrice" required>
-                    </div>
-                    <button type="submit">Save to Sheet</button>
-                    <div id="calculationResult">
-                        <div class="result-row">
-                            <span id="costLabel">အရင်း:</span>
-                            <span id="totalCostValue">0</span>
+                <div id="sale-search-tab" class="sub-tab">
+                    <section class="search-section" id="saleSearchSection">
+                        <h2>Search Sale Records</h2>
+                        <form id="saleSearchForm">
+                            <div class="form-group">
+                                <label for="saleSearchQuery">Search by Merchant:</label>
+                                <input type="text" id="saleSearchQuery" placeholder="Enter name...">
+                            </div>
+                            <div class="form-group">
+                                <label for="saleStartDate">From Date:</label>
+                                <input type="date" id="saleStartDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="saleEndDate">To Date:</label>
+                                <input type="date" id="saleEndDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="saleSearchStatus">Status:</label>
+                                <select id="saleSearchStatus">
+                                    <option value="all">All</option>
+                                    <option value="paid">Paid</option>
+                                    <option value="unpaid">Unpaid</option>
+                                </select>
+                            </div>
+                            <button type="submit">Search</button>
+                        </form>
+            
+                        <div class="search-results">
+                            <h3>Results</h3>
+                            <table id="saleResultsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Quantity</th>
+                                        <th>Amount</th>
+                                        <th>Paid</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    </tbody>
+                            </table>
+                            <button id="saveSaleChanges" style="display: none;">Save Changes</button>
                         </div>
-                        <div class="result-row">
-                            <span id="profitLabel">Profit:</span>
-                            <span id="profitValue">0</span>
-                        </div>
-                    </div>
-                </form>
-                <p id="calc-response-message"></p>
+                    </section>
+                </div>
+                <div id="sale-settings-tab" class="sub-tab">
+                    <section class="settings-section">
+                        <h2>Settings</h2>
+                        <p>This is where settings for the Sale page will go. We can add options here like a reset button or managing merchants.</p>
+                    </section>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <div id="summaryPage" class="page">
-            <div class="container">
-                <h1>Summary</h1>
-                <h2>Merchant Sales Summary</h2>
-                <div class="table-wrapper">
-                    <div id="merchantSummaryTable"></div>
+        <section class="page" id="buyPage" data-page="buy">
+            <div class="sub-nav-bar">
+                <a href="#" class="sub-nav-button active" data-tab-target="buy-form-tab">Record</a>
+                <a href="#" class="sub-nav-button" data-tab-target="buy-search-tab">Search</a>
+                <a href="#" class="sub-nav-button" data-tab-target="buy-settings-tab">Settings</a>
+            </div>
+            <div class="sub-tab-content">
+                <div id="buy-form-tab" class="sub-tab active">
+                    <section class="data-entry-form">
+                        <h2>Record a Purchase</h2>
+                        <form id="buyForm">
+                            <div class="form-group">
+                                <label for="buyDate">Date</label>
+                                <input type="date" id="buyDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <select id="description" required>
+                                    <option value="">Select a Description</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="buyQuantity">Quantity</label>
+                                <input type="number" id="buyQuantity" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="buyAmount">Amount</label>
+                                <input type="text" id="buyAmount">
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <label for="buyPaidStatus">Paid</label>
+                                <input type="checkbox" id="buyPaidStatus">
+                            </div>
+                            <button type="submit">Add Purchase</button>
+                        </form>
+                    </section>
                 </div>
-                <hr>
-                <h2>To Remit</h2>
-                <div class="table-wrapper">
-                    <div id="remitSummaryTable"></div>
+                <div id="buy-search-tab" class="sub-tab">
+                    <section class="search-section" id="buySearchSection">
+                        <h2>Search Purchase Records</h2>
+                        <form id="buySearchForm">
+                            <div class="form-group">
+                                <label for="buySearchQuery">Search by Description:</label>
+                                <input type="text" id="buySearchQuery" placeholder="Enter name...">
+                            </div>
+                            <div class="form-group">
+                                <label for="buyStartDate">From Date:</label>
+                                <input type="date" id="buyStartDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="buyEndDate">To Date:</label>
+                                <input type="date" id="buyEndDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="buySearchStatus">Status:</label>
+                                <select id="buySearchStatus">
+                                    <option value="all">All</option>
+                                    <option value="paid">Paid</option>
+                                    <option value="unpaid">Unpaid</option>
+                                </select>
+                            </div>
+                            <button type="submit">Search</button>
+                        </form>
+            
+                        <div class="search-results">
+                            <h3>Results</h3>
+                            <table id="buyResultsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Quantity</th>
+                                        <th>Amount</th>
+                                        <th>Paid</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    </tbody>
+                            </table>
+                            <button id="saveBuyChanges" style="display: none;">Save Changes</button>
+                        </div>
+                    </section>
+                </div>
+                <div id="buy-settings-tab" class="sub-tab">
+                    <section class="settings-section">
+                        <h2>Settings</h2>
+                        <p>This is where settings for the Buy page will go. We can add options here to manage purchase descriptions.</p>
+                    </section>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
+
+        <section class="page" id="calculatorPage" data-page="calculator">
+            <section class="data-entry-form">
+                <h2>Calculate Base Price & Profit</h2>
+                <form id="calcForm">
+                    <div class="form-group">
+                        <label for="range">$ Range</label>
+                        <input type="number" id="range" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pe">PE</label>
+                        <input type="number" id="pe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="packRoll">Pack Roll</label>
+                        <input type="number" id="packRoll" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="plastic">Plastic</label>
+                        <input type="number" id="plastic" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gyapha">ဂျပ်ဖာ</label>
+                        <input type="number" id="gyapha" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="carFee">ကားခ</label>
+                        <input type="number" id="carFee" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="laborFee">လုပ်အားခ</label>
+                        <input type="number" id="laborFee" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="packetCount">အထုပ်ရေ</label>
+                        <input type="number" id="packetCount" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="salePrice">Sale Price</label>
+                        <input type="number" id="salePrice" required>
+                    </div>
+                    <button type="button" id="calculateBtn">Calculate</button>
+                </form>
+                <div class="calculation-results">
+                    <h3>Results</h3>
+                    <p>Base Price: <span id="basePriceResult">0</span></p>
+                    <p>Profit: <span id="profitResult">0</span></p>
+                </div>
+            </section>
+        </section>
+
+        <section class="page" id="summaryPage" data-page="summary">
+            <section class="summary-section">
+                <h2>Sales Summary</h2>
+                <div id="salesSummary">
+                    <p>Total Sales: <span id="totalSales">0</span></p>
+                    <p>Total Paid Sales: <span id="totalPaidSales">0</span></p>
+                    <p>Total Unpaid Sales: <span id="totalUnpaidSales">0</span></p>
+                </div>
+            </section>
+            <section class="summary-section">
+                <h2>Buy Summary</h2>
+                <div id="buySummary">
+                    <p>Total Buy Amount: <span id="totalBuy">0</span></p>
+                    <p>Total Paid Buy: <span id="totalPaidBuy">0</span></p>
+                    <p>Total Unpaid Buy: <span id="totalUnpaidBuy">0</span></p>
+                </div>
+            </section>
+            <section class="summary-section">
+                <h2>Cash Flow</h2>
+                <div id="cashFlow">
+                    <p>Net Cash Flow: <span id="netCashFlow">0</span></p>
+                </div>
+            </section>
+        </section>
+
+        <section class="page" id="syncPage" data-page="sync">
+            <section class="data-entry-form">
+                <h2>Data Sync</h2>
+                <p>Use these buttons to sync your data with the cloud. All data from your current device will be saved to the cloud, and all data from the cloud will be loaded to your device. This will override existing data.</p>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button id="uploadBtn">Upload to Cloud</button>
+                    <button id="downloadBtn">Download from Cloud</button>
+                </div>
+            </section>
+        </section>
+
+    </main>
     
-    <nav class="navbar">
-        <button id="saleDataBtnNav" class="active"><i class="fas fa-home"></i><span>Sale Data</span></button>
-        <button id="buyDataBtnNav"><i class="fas fa-shopping-cart"></i><span>Buy Data</span></button>
-        <button id="calculatorBtnNav"><i class="fas fa-calculator"></i><span>Calculator</span></button>
-        <button id="summaryBtnNav"><i class="fas fa-chart-bar"></i><span>Summary</span></button>
+    <nav class="bottom-nav">
+        <a href="#" class="nav-button active" data-page-target="sale">
+            <i class="fas fa-dollar-sign"></i>
+            <span>Sale</span>
+        </a>
+        <a href="#" class="nav-button" data-page-target="buy">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Buy</span>
+        </a>
+        <a href="#" class="nav-button" data-page-target="calculator">
+            <i class="fas fa-calculator"></i>
+            <span>Calc</span>
+        </a>
+        <a href="#" class="nav-button" data-page-target="summary">
+            <i class="fas fa-chart-bar"></i>
+            <span>Summary</span>
+        </a>
+        <a href="#" class="nav-button" data-page-target="sync">
+            <i class="fas fa-cloud"></i>
+            <span>Sync</span>
+        </a>
     </nav>
-
+    
     <script src="script.js"></script>
 </body>
 </html>

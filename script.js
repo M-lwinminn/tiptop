@@ -7,32 +7,24 @@ const firebaseConfig = {
     messagingSenderId: "311902212615",
     appId: "1:311902212615:web:55a9561645d15f1d91d0a2",
     measurementId: "G-65YP7M5JVR",
-    databaseURL: "https://bssaledata-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    databaseURL: "https://bssaledata-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-
-// Data stores
-const merchants = {
-    'ZinZin 1': 207000,
-    'ZinZin': 207000,
-    'ZZ Kpt': 207000,
-    'Win': 211500,
-    'Moe': 207000
-};
-
-const buyDescriptions = ['Steel', 'Wood', 'Plastic Bags', 'Transport'];
-
 // Firebase references
 const salesRef = database.ref('sales');
 const buyRef = database.ref('buy');
+const merchantsRef = database.ref('merchants');
+const descriptionsRef = database.ref('descriptions');
 
 // Local arrays to hold data retrieved from Firebase
 let salesData = [];
 let buyData = [];
+let merchantsData = [];
+let descriptionsData = [];
 
 // Utility function to format numbers with commas
 function formatNumber(num) {
@@ -46,7 +38,6 @@ function showPage(pageId) {
     pages.forEach(page => page.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
     
-    // Default to the record tab on Sale and Buy pages
     if (pageId === 'salePage' || pageId === 'buyPage') {
         const pageElement = document.getElementById(pageId);
         const recordTab = pageElement.querySelector('.sub-nav-button[data-tab-target$="-form-tab"]');
@@ -99,6 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSalePage();
     setupBuyPage();
     setupCalculatorPage();
+    setupSaleSettingsPage();
+    setupBuySettingsPage();
 });
 
 // --- Firebase Data Fetching and Real-time Listeners ---
@@ -126,6 +119,32 @@ function fetchDataAndSetupListeners() {
         }
         updateSummaryPage();
     });
+
+    // Listen for changes in merchants
+    merchantsRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        merchantsData = [];
+        if (data) {
+            for (let key in data) {
+                merchantsData.push({ id: key, ...data[key] });
+            }
+        }
+        updateMerchantDropdown();
+        updateMerchantList();
+    });
+
+    // Listen for changes in descriptions
+    descriptionsRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        descriptionsData = [];
+        if (data) {
+            for (let key in data) {
+                descriptionsData.push({ id: key, name: data[key] });
+            }
+        }
+        updateDescriptionDropdown();
+        updateDescriptionList();
+    });
 }
 
 // --- Sale Page Logic ---
@@ -145,8 +164,9 @@ function setupSalePage() {
 
     merchantSelect.addEventListener('change', () => {
         const selectedMerchant = merchantSelect.value;
-        if (merchants[selectedMerchant]) {
-            unitPriceInput.value = formatNumber(merchants[selectedMerchant]);
+        const merchant = merchantsData.find(m => m.name === selectedMerchant);
+        if (merchant) {
+            unitPriceInput.value = formatNumber(merchant.price);
         } else {
             unitPriceInput.value = '';
         }
@@ -172,10 +192,10 @@ function setupSalePage() {
             date: saleDateInput.value,
             merchant: merchantSelect.value,
             quantity: quantityInput.value,
+            unitPrice: parseFloat(unitPriceInput.value.replace(/,/g, '')),
             amount: parseFloat(amountInput.value.replace(/,/g, '')),
             paid: document.getElementById('paidStatus').checked
         };
-        // Push data to Firebase
         salesRef.push(newSale)
             .then(() => {
                 alert('Sale recorded successfully!');
@@ -189,11 +209,25 @@ function setupSalePage() {
     });
 }
 
+function updateMerchantDropdown() {
+    const merchantSelect = document.getElementById('merchant');
+    merchantSelect.innerHTML = '<option value="">Select a Merchant</option>';
+    merchantsData.forEach(merchant => {
+        const option = document.createElement('option');
+        option.value = merchant.name;
+        option.textContent = merchant.name;
+        merchantSelect.appendChild(option);
+    });
+}
+
 // --- Buy Page Logic ---
 function setupBuyPage() {
     const buyForm = document.getElementById('buyForm');
     const buyDateInput = document.getElementById('buyDate');
     const descriptionSelect = document.getElementById('description');
+    const buyQuantityInput = document.getElementById('buyQuantity');
+    const buyUnitPriceInput = document.getElementById('buyUnitPrice');
+    const buyAmountInput = document.getElementById('buyAmount');
 
     const today = new Date();
     const year = today.getFullYear();
@@ -201,23 +235,30 @@ function setupBuyPage() {
     const day = String(today.getDate()).padStart(2, '0');
     buyDateInput.value = `${year}-${month}-${day}`;
 
-    buyDescriptions.forEach(desc => {
-        const option = document.createElement('option');
-        option.value = desc;
-        option.textContent = desc;
-        descriptionSelect.appendChild(option);
-    });
+    buyQuantityInput.addEventListener('input', calculateBuyAmount);
+    buyUnitPriceInput.addEventListener('input', calculateBuyAmount);
+
+    function calculateBuyAmount() {
+        const quantity = parseFloat(buyQuantityInput.value);
+        const unitPrice = parseFloat(buyUnitPriceInput.value);
+        if (!isNaN(quantity) && !isNaN(unitPrice)) {
+            const amount = quantity * unitPrice;
+            buyAmountInput.value = formatNumber(amount);
+        } else {
+            buyAmountInput.value = '';
+        }
+    }
 
     buyForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const newBuy = {
             date: buyDateInput.value,
             description: descriptionSelect.value,
-            quantity: document.getElementById('buyQuantity').value,
-            amount: document.getElementById('buyAmount').value,
+            quantity: buyQuantityInput.value,
+            unitPrice: buyUnitPriceInput.value,
+            amount: parseFloat(buyAmountInput.value.replace(/,/g, '')),
             paid: document.getElementById('buyPaidStatus').checked
         };
-        // Push data to Firebase
         buyRef.push(newBuy)
             .then(() => {
                 alert('Purchase recorded successfully!');
@@ -228,6 +269,17 @@ function setupBuyPage() {
                 console.error("Error adding purchase:", error);
                 alert('Error adding purchase. Please try again.');
             });
+    });
+}
+
+function updateDescriptionDropdown() {
+    const descriptionSelect = document.getElementById('description');
+    descriptionSelect.innerHTML = '<option value="">Select a Description</option>';
+    descriptionsData.forEach(description => {
+        const option = document.createElement('option');
+        option.value = description.name;
+        option.textContent = description.name;
+        descriptionSelect.appendChild(option);
     });
 }
 
@@ -280,6 +332,128 @@ function updateSummaryPage() {
     document.getElementById('netCashFlow').textContent = formatNumber(netCashFlow);
 }
 
+// --- Settings Page Logic ---
+function setupSaleSettingsPage() {
+    const merchantForm = document.getElementById('merchantForm');
+
+    merchantForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('newMerchantName').value;
+        const price = parseFloat(document.getElementById('newMerchantPrice').value);
+        if (name && !isNaN(price)) {
+            merchantsRef.push({ name: name, price: price })
+                .then(() => merchantForm.reset())
+                .catch(error => console.error("Error adding merchant:", error));
+        } else {
+            alert('Please enter a valid name and price.');
+        }
+    });
+
+    document.getElementById('merchantList').addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-btn')) {
+            const id = e.target.closest('li').dataset.id;
+            if (confirm('Are you sure you want to delete this merchant?')) {
+                merchantsRef.child(id).remove()
+                    .catch(error => console.error("Error deleting merchant:", error));
+            }
+        }
+        if (e.target.classList.contains('edit-btn')) {
+            const li = e.target.closest('li');
+            const id = li.dataset.id;
+            const currentName = li.querySelector('.item-name').textContent;
+            const currentPrice = li.querySelector('.item-price').textContent.replace(' Ks', '').replace(/,/g, '');
+
+            const newName = prompt("Edit merchant name:", currentName);
+            const newPrice = prompt("Edit default price:", currentPrice);
+
+            if (newName !== null && newPrice !== null) {
+                const updatedPrice = parseFloat(newPrice);
+                if (!isNaN(updatedPrice)) {
+                    merchantsRef.child(id).update({ name: newName, price: updatedPrice })
+                        .catch(error => console.error("Error updating merchant:", error));
+                } else {
+                    alert('Invalid price entered.');
+                }
+            }
+        }
+    });
+}
+
+function updateMerchantList() {
+    const merchantList = document.getElementById('merchantList');
+    merchantList.innerHTML = '';
+    merchantsData.forEach(merchant => {
+        const li = document.createElement('li');
+        li.dataset.id = merchant.id;
+        li.innerHTML = `
+            <span class="item-info">
+                <span class="item-name">${merchant.name}</span>:
+                <span class="item-price">${formatNumber(merchant.price)} Ks</span>
+            </span>
+            <div class="item-actions">
+                <button class="edit-btn">Edit</button>
+                <button class="delete-btn">Delete</button>
+            </div>
+        `;
+        merchantList.appendChild(li);
+    });
+}
+
+function setupBuySettingsPage() {
+    const descriptionForm = document.getElementById('descriptionForm');
+
+    descriptionForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('newDescriptionName').value;
+        if (name) {
+            descriptionsRef.push(name)
+                .then(() => descriptionForm.reset())
+                .catch(error => console.error("Error adding description:", error));
+        } else {
+            alert('Please enter a valid description.');
+        }
+    });
+
+    document.getElementById('descriptionList').addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-btn')) {
+            const id = e.target.closest('li').dataset.id;
+            if (confirm('Are you sure you want to delete this description?')) {
+                descriptionsRef.child(id).remove()
+                    .catch(error => console.error("Error deleting description:", error));
+            }
+        }
+        if (e.target.classList.contains('edit-btn')) {
+            const li = e.target.closest('li');
+            const id = li.dataset.id;
+            const currentName = li.querySelector('.item-info').textContent;
+
+            const newName = prompt("Edit description:", currentName);
+
+            if (newName !== null && newName.trim() !== "") {
+                descriptionsRef.child(id).set(newName)
+                    .catch(error => console.error("Error updating description:", error));
+            }
+        }
+    });
+}
+
+function updateDescriptionList() {
+    const descriptionList = document.getElementById('descriptionList');
+    descriptionList.innerHTML = '';
+    descriptionsData.forEach(description => {
+        const li = document.createElement('li');
+        li.dataset.id = description.id;
+        li.innerHTML = `
+            <span class="item-info">${description.name}</span>
+            <div class="item-actions">
+                <button class="edit-btn">Edit</button>
+                <button class="delete-btn">Delete</button>
+            </div>
+        `;
+        descriptionList.appendChild(li);
+    });
+}
+
 // --- Search Functionality (Now Firebase-compatible) ---
 function setupSearchFunctionality(searchFormId, dataArray, tableId, saveChangesBtnId, pageType) {
     const searchForm = document.getElementById(searchFormId);
@@ -293,7 +467,6 @@ function setupSearchFunctionality(searchFormId, dataArray, tableId, saveChangesB
         const startDate = document.getElementById(`${pageType}StartDate`).value;
         const endDate = document.getElementById(`${pageType}EndDate`).value;
 
-        // Filter data from the global arrays
         const filteredData = dataArray.filter(item => {
             const matchesQuery = pageType === 'sale' ? item.merchant.toLowerCase().includes(searchQuery) : item.description.toLowerCase().includes(searchQuery);
             const matchesStatus = searchStatus === 'all' || (searchStatus === 'paid' && item.paid) || (searchStatus === 'unpaid' && !item.paid);
@@ -322,11 +495,14 @@ function setupSearchFunctionality(searchFormId, dataArray, tableId, saveChangesB
             if (checkbox) {
                 const key = checkbox.dataset.key;
                 const newPaidStatus = checkbox.checked;
-                updates[key] = { paid: newPaidStatus };
+                // Only update if the value has changed
+                const currentItem = dataArray.find(item => item.id === key);
+                if (currentItem && currentItem.paid !== newPaidStatus) {
+                    updates[key] = { paid: newPaidStatus };
+                }
             }
         });
         
-        // Update the database with all changes at once
         if (Object.keys(updates).length > 0) {
             databaseRef.update(updates)
                 .then(() => {
@@ -379,4 +555,3 @@ function displayResults(results, pageType, resultsTableBody) {
 // Call the search setup functions for each page
 setupSearchFunctionality('saleSearchForm', salesData, 'saleResultsTable', 'saveSaleChanges', 'sale');
 setupSearchFunctionality('buySearchForm', buyData, 'buyResultsTable', 'saveBuyChanges', 'buy');
-
